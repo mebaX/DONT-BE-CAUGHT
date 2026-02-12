@@ -175,7 +175,7 @@ export default function GizliAskGame() {
                         width={300}
                         height={300}
                         priority
-                        className={isKissing ? "object-contain mt-120 w-130 h-130 " : "object-contain mt-120 w-100 h-100"}
+                        className="object-contain mt-100 w-90 h-90 "
                         style={{ imageRendering: 'pixelated' }}
                     />
                 </div>
@@ -188,7 +188,7 @@ export default function GizliAskGame() {
                         width={200}
                         height={200}
                         priority
-                        className="object-contain w-120 h-120 mb-80"
+                        className="object-contain w-110 h-110 mb-80"
                         style={{ imageRendering: 'pixelated' }}
                     />
                 </div>
