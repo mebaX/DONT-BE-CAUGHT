@@ -21,6 +21,12 @@ export default function GizliAskGame() {
     const [principalState, setPrincipalState] = useState<PrincipalState>('safe');
     const [hearts, setHearts] = useState<Heart[]>([]);
 
+    // To access state inside timeouts without dependencies
+    const isKissingRef = useRef(false);
+    useEffect(() => {
+        isKissingRef.current = isKissing;
+    }, [isKissing]);
+
     const principalTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const warningTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const dangerTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -85,12 +91,12 @@ export default function GizliAskGame() {
                 // Warning phase
                 setPrincipalState('warning');
 
-                // After 0.5s, turn around to danger
+                // After 1s, turn around to danger
                 warningTimerRef.current = setTimeout(() => {
                     setPrincipalState('danger');
 
                     // Check if caught
-                    if (isKissing) {
+                    if (isKissingRef.current) {
                         setGameState('gameOver');
                         return;
                     }
@@ -99,7 +105,7 @@ export default function GizliAskGame() {
                     const dangerDuration = Math.random() * 1000 + 1500; // 1.5-2.5 seconds
                     dangerTimerRef.current = setTimeout(() => {
                         // Check again if caught during danger phase
-                        if (isKissing) {
+                        if (isKissingRef.current) {
                             setGameState('gameOver');
                         } else {
                             setPrincipalState('safe');
@@ -117,7 +123,7 @@ export default function GizliAskGame() {
             if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
             if (dangerTimerRef.current) clearTimeout(dangerTimerRef.current);
         };
-    }, [gameState, isKissing]);
+    }, [gameState]);
 
     // Score increment while kissing
     useEffect(() => {
@@ -162,10 +168,18 @@ export default function GizliAskGame() {
 
     // Warning sound - play when principal enters warning state
     useEffect(() => {
-        if (principalState === 'warning' && alertRef.current) {
-            alertRef.current.currentTime = 0;
-            alertRef.current.play().catch(err => console.log('Alert sound error:', err));
+        const audio = alertRef.current;
+        if (principalState === 'warning' && audio) {
+            audio.currentTime = 0;
+            audio.play().catch(err => console.log('Alert sound error:', err));
         }
+
+        return () => {
+            if (principalState === 'warning' && audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        };
     }, [principalState]);
 
     // Whoosh sound - play when principal turns to danger
